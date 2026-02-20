@@ -209,7 +209,7 @@ let mlData = ${JSON.stringify(mlData, null, 4)};
 let pubgData = ${JSON.stringify(pubgData, null, 4)};
         `;
         navigator.clipboard.writeText(configStr).then(() => {
-            alert("Code Copied!\n\nNow go to index.html, find 'let mlData = ...' and replace it with this code to update for everyone.");
+            alert("✅ Code Copied Successfully!\n\n1. Go to your index.html file.\n2. Find the 'let mlData = ...' section.\n3. Paste this new code to update prices.");
         });
     }
 

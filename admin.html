@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JM Shop Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { color: #f1c40f; text-align: center; margin-bottom: 30px; }
+        
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .admin-tab { 
+            flex: 1; padding: 12px; 
+            background: #1e1e1e; 
+            text-align: center; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            color: #aaa; 
+            border: 1px solid #333;
+            transition: 0.3s;
+        }
+        .admin-tab.active { background: #f1c40f; color: #000; font-weight: bold; border-color: #f1c40f; }
+
+        .admin-group { 
+            background: #1e1e1e; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            border: 1px solid #333; 
+        }
+        .admin-label { color: #f1c40f; font-size: 16px; font-weight: bold; margin-bottom: 15px; display: block; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        .admin-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .admin-name { font-size: 14px; color: #ccc; flex: 1; }
+        .admin-input { 
+            width: 100px; 
+            background: #2c2c2c; 
+            border: 1px solid #444; 
+            color: #00ff88; 
+            padding: 8px; 
+            border-radius: 6px; 
+            text-align: right; 
+            font-weight: bold; 
+            font-size: 14px;
+        }
+        .admin-input:focus { outline: none; border-color: #f1c40f; }
+
+        .btn-container { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; }
+        .btn { 
+            padding: 15px; border: none; border-radius: 10px; 
+            font-weight: bold; font-size: 16px; cursor: pointer; 
+            transition: 0.2s;
+        }
+        .btn-save { background: #00ff88; color: #000; }
+        .btn-save:hover { background: #00cc6a; }
+        
+        .btn-export { background: #f1c40f; color: #000; }
+        .btn-export:hover { background: #d4ac0d; }
+        
+        .btn-reset { background: #e74c3c; color: #fff; }
+        .btn-reset:hover { background: #c0392b; }
+
+        .info-text { font-size: 12px; color: #888; text-align: center; margin-top: 10px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1><i class="fa-solid fa-user-shield"></i> JM Shop Admin</h1>
+
+    <div class="admin-tabs">
+        <div id="tab-MLBB" class="admin-tab active" onclick="renderAdmin('MLBB')">MLBB</div>
+        <div id="tab-PUBG" class="admin-tab" onclick="renderAdmin('PUBG')">PUBG</div>
+    </div>
+
+    <div id="admin-content"></div>
+
+    <div class="btn-container">
+        <button class="btn btn-save" onclick="saveAdmin()">
+            <i class="fa-solid fa-floppy-disk"></i> Save to Local (Preview)
+        </button>
+        <div class="info-text">Saves changes to THIS device only. Open index.html to preview.</div>
+
+        <button class="btn btn-export" onclick="exportConfig()">
+            <i class="fa-solid fa-code"></i> Export Config (For Update)
+        </button>
+        <div class="info-text">Click this to copy code. Then paste it into index.html to update for ALL customers.</div>
+
+        <button class="btn btn-reset" onclick="resetAdmin()">
+            <i class="fa-solid fa-rotate-left"></i> Reset Defaults
+        </button>
+    </div>
+</div>
+
+<script>
+    // Default Data (Must match index.html initially)
+    let mlData = {
+        weekly: { n: "Weekly Pass", p: 6100, icon: "https://img.smile.one/media/catalog/product/1/5q/15qtr79kjv14qfe1691739555.png" },
+        promo: [
+            {n:"50+50 Bonus", p:3500}, {n:"150+150 Bonus", p:9900},
+            {n:"250+250 Bonus", p:15700}, {n:"500+500 Bonus", p:31600}
+        ],
+        packages: [
+            { n: "Elite Weekly Package", p: 3500, icon: "https://img.smile.one/media/catalog/product/m/gq/mgq1ce0apvvjko71769494335.png", note: "Available Once A Week" },
+            { n: "Epic Monthly Package", p: 17500, icon: "https://img.smile.one/media/catalog/product/k/v3/kv3pvz7irydug0g1769494696.png", note: "Available Once A Month" }
+        ],
+        normal: [
+            {n:"11 Dia",p:1100},{n:"22 Dia",p:1900},{n:"56 Dia",p:4600},{n:"86 Dia",p:5300},{n:"112 Dia",p:8600},{n:"172 Dia",p:10300},
+            {n:"257 Dia",p:14900},{n:"343 Dia",p:19700},{n:"429 Dia",p:24600},{n:"514 Dia",p:29600},{n:"600 Dia",p:34100},{n:"706 Dia",p:39600},
+            {n:"878 Dia",p:49600},{n:"1049 Dia",p:59600},{n:"2195 Dia",p:122100},{n:"3688 Dia",p:200100},{n:"5532 Dia",p:299100},{n:"9288 Dia",p:495100}
+        ]
+    };
+    let pubgData = [
+        {n:"60 UC",p:4100},{n:"120 UC",p:8100},{n:"180 UC",p:12100},{n:"240 UC",p:16100},{n:"325 UC",p:20100},{n:"660 UC",p:39600},
+        {n:"1800 UC",p:99100},{n:"3850 UC",p:196100},{n:"8100 UC",p:388100}
+    ];
+
+    // Load saved data if exists
+    (function loadAdminData() {
+        const savedML = localStorage.getItem('jm_ml_data');
+        const savedPUBG = localStorage.getItem('jm_pubg_data');
+        if(savedML) mlData = JSON.parse(savedML);
+        if(savedPUBG) pubgData = JSON.parse(savedPUBG);
+    })();
+
+    // Render Logic
+    function renderAdmin(tab) {
+        const container = document.getElementById('admin-content');
+        container.innerHTML = "";
+        
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+
+        if (tab === 'MLBB') {
+            container.innerHTML += createAdminInput("Weekly Pass", [mlData.weekly], 'weekly');
+            container.innerHTML += createAdminInput("Promo Packages", mlData.promo, 'promo');
+            container.innerHTML += createAdminInput("Exclusive Packages", mlData.packages, 'packages');
+            container.innerHTML += createAdminInput("Diamonds", mlData.normal, 'normal');
+        } else {
+            container.innerHTML += createAdminInput("PUBG UC", pubgData, 'pubg');
+        }
+    }
+
+    function createAdminInput(title, arr, key) {
+        let html = `<div class="admin-group"><span class="admin-label">${title}</span>`;
+        arr.forEach((item, index) => {
+            const isSold = item.sold ? 'checked' : '';
+            html += `<div class="admin-row">
+                        <span class="admin-name">${item.n}</span>
+                        <label style="margin-right:10px; font-size:12px; color:#e74c3c; cursor:pointer;">
+                            <input type="checkbox" class="admin-sold" ${isSold} data-key="${key}" data-index="${index}"> Sold Out
+                        </label>
+                        <input type="number" class="admin-input" value="${item.p}" data-key="${key}" data-index="${index}">
+                     </div>`;
+        });
+        html += `</div>`;
+        return html;
+    }
+
+    function saveAdmin() {
+        const inputs = document.querySelectorAll('.admin-input');
+        inputs.forEach(input => {
+            const key = input.getAttribute('data-key');
+            const idx = parseInt(input.getAttribute('data-index'));
+            const val = parseInt(input.value);
+
+            if (key === 'pubg') {
+                pubgData[idx].p = val;
+            } else if (key === 'weekly') {
+                mlData.weekly.p = val;
+            } else {
+                mlData[key][idx].p = val;
+            }
+        });
+
+        // Save Sold Status
+        document.querySelectorAll('.admin-sold').forEach(checkbox => {
+            const key = checkbox.getAttribute('data-key');
+            const idx = parseInt(checkbox.getAttribute('data-index'));
+            const isSold = checkbox.checked;
+
+            if (key === 'pubg') {
+                pubgData[idx].sold = isSold;
+            } else if (key === 'weekly') {
+                mlData.weekly.sold = isSold;
+            } else {
+                mlData[key][idx].sold = isSold;
+            }
+        });
+
+        localStorage.setItem('jm_ml_data', JSON.stringify(mlData));
+        localStorage.setItem('jm_pubg_data', JSON.stringify(pubgData));
+        
+        alert("Saved to Local Storage!\n\nIf you open index.html on THIS browser, you will see the new prices.");
+    }
+
+    function exportConfig() {
+        const configStr = `
+// REPLACE THE DATA SECTION IN YOUR CODE WITH THIS:
+let mlData = ${JSON.stringify(mlData, null, 4)};
+let pubgData = ${JSON.stringify(pubgData, null, 4)};
+        `;
+        navigator.clipboard.writeText(configStr).then(() => {
+            alert("Code Copied!\n\nNow go to index.html, find 'let mlData = ...' and replace it with this code to update for everyone.");
+        });
+    }
+
+    function resetAdmin() {
+        if(confirm("Reset all prices to default?")) {
+            localStorage.removeItem('jm_ml_data');
+            localStorage.removeItem('jm_pubg_data');
+            location.reload();
+        }
+    }
+
+    // Init
+    renderAdmin('MLBB');
+</script>
+</body>
+</html>
